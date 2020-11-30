@@ -1,0 +1,12 @@
+{
+  "folders": [
+    {
+      "name": "Arduino",
+      "path": "arduino"
+    },
+    {
+      "name": "Web",
+      "path": "web"
+    }
+  ]
+}
