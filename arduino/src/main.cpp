@@ -1,41 +1,50 @@
 #include <Arduino.h>
-#include <pn532.h>
-#include <pn532_uno.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_PN532.h>
+#include <ArduinoJson.h>
 
-uint8_t buff[255];
-uint8_t uid[MIFARE_UID_MAX_LENGTH];
-int32_t uid_len = 0;
-PN532 pn532;
+#include "freeMemory.h"
 
-void setup() {
-  // put your setup code here, to run once:
-  PN532_SPI_Init(&pn532);
-  
-  if (PN532_GetFirmwareVersion(&pn532, buff) == PN532_STATUS_OK) {
-    Serial.print("Found PN532 with firmware version: ");
-    Serial.print(buff[1], DEC);
-    Serial.print(".");
-    Serial.println(buff[2], DEC);
-    Serial.println("Waiting for RFID/NFC card...");
+#define BAUD_RATE 114200
+
+// If using the breakout with SPI, define the pins for SPI communication.
+#define PN532_SCK  (13)
+#define PN532_MOSI (11)
+#define PN532_SS   (4)
+#define PN532_MISO (12)
+
+Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
+
+uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 }; // Buffer to store the returned UID
+  uint8_t uid_length;				             // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
+
+void setup(void) {
+  Serial.begin(BAUD_RATE);
+
+  nfc.begin();
+
+  uint32_t versiondata = nfc.getFirmwareVersion();
+
+  if (!versiondata) {
+    Serial.print("Didn't find PN53x board");
+    while (true);
   }
 
-  PN532_SamConfiguration(&pn532);
+   nfc.SAMConfig();
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  // Check if a card is available to read
-  uid_len = PN532_ReadPassiveTarget(&pn532, uid, PN532_MIFARE_ISO14443A, 1000);
+void loop(void) {
+  // this is blocking
+  boolean success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uid_length);
 
-  if (uid_len == PN532_STATUS_ERROR) return;
-
-  Serial.print("Found card with UID: ");
-  for (uint8_t i = 0; i < uid_len; i++) {
-    if (uid[i] <= 0xF) {
-      Serial.print("0");
-    }
-    Serial.print(uid[i], HEX);
-    Serial.print(" ");
+  if (success) {
+    // do something
+    Serial.println("got match");
   }
+
+  StaticJsonDocument<256> doc;
+  doc["sram_usage"] = freeMemory();
+  serializeJson(doc, Serial);
   Serial.println();
 }
