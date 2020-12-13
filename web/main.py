@@ -1,13 +1,11 @@
-from fastapi.applications import FastAPI
+import uvicorn
+from arduino import arduino
+from app import app
+import message
 
-app = FastAPI()
-
-@app.get("/")
-def index():
-    return "Hello, world!"
-
-if __name__ == "__main__": 
-    import uvicorn
+if __name__ == "__main__":
+    arduino.receive = message.parse
+    arduino.start(start_receiver=True)
 
     uvicorn.run(app)
     

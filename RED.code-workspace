@@ -8,5 +8,11 @@
       "name": "Web",
       "path": "web"
     }
-  ]
+  ],
+  "settings": {
+    "files.associations": {
+      "condition_variable": "cpp",
+      "functional": "cpp"
+    }
+  }
 }

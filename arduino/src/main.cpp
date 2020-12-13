@@ -1,23 +1,15 @@
 #include <Arduino.h>
-#include <Wire.h>
-#include <SPI.h>
 #include <Adafruit_PN532.h>
 #include <ArduinoJson.h>
 
-#include "freeMemory.h"
-
 #define BAUD_RATE 114200
 
-// If using the breakout with SPI, define the pins for SPI communication.
-#define PN532_SCK  (13)
-#define PN532_MOSI (11)
-#define PN532_SS   (4)
-#define PN532_MISO (12)
+#define PN532_IRQ   (2)
+#define PN532_RESET (3)
 
-Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
+Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
 
-uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 }; // Buffer to store the returned UID
-  uint8_t uid_length;				             // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
+bool nfc_enabled = true;
 
 void setup(void) {
   Serial.begin(BAUD_RATE);
@@ -27,24 +19,55 @@ void setup(void) {
   uint32_t versiondata = nfc.getFirmwareVersion();
 
   if (!versiondata) {
-    Serial.print("Didn't find PN53x board");
-    while (true);
+    Serial.println("Didn't find PN53x board");
+    while (1); // halt
   }
+  
+  Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX); 
+  Serial.print("Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
+  Serial.print('.');              Serial.println((versiondata>>8) & 0xFF, DEC);
 
-   nfc.SAMConfig();
+  nfc.setPassiveActivationRetries(0x00);
+
+  nfc.SAMConfig();
 }
 
 void loop(void) {
-  // this is blocking
-  boolean success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uid_length);
+  if (nfc_enabled) {
+    uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 }; // Buffer to store the returned UID
+    uint8_t uid_length;				               // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
 
-  if (success) {
-    // do something
-    Serial.println("got match");
+    if (nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uid_length)) {
+      StaticJsonDocument<256> doc;
+
+      String uid_str;
+
+      for (int i = 0; i < uid_length; ++i) 
+        uid_str.concat(uid[i]);
+
+      doc["type"] = "CARD";
+      doc["uid"]  = uid_str;
+
+      serializeJson(doc, Serial);
+      Serial.println();
+    }
   }
 
-  StaticJsonDocument<256> doc;
-  doc["sram_usage"] = freeMemory();
-  serializeJson(doc, Serial);
-  Serial.println();
+  while (Serial.available()) {
+    StaticJsonDocument<256> doc;
+    deserializeJson(doc, Serial);
+
+    int type = doc["type"].as<int>();
+
+    switch (type) {
+       case 0: {
+        nfc_enabled = false;
+        break;
+      }
+      case 1: {
+        nfc_enabled = true;
+        break;
+      }
+    }
+  }
 }
