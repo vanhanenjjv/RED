@@ -8,5 +8,10 @@
       "name": "Web",
       "path": "web"
     }
-  ]
+  ],
+  "settings": {
+    "files.associations": {
+      "cstddef": "cpp"
+    }
+  }
 }
