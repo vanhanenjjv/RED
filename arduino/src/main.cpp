@@ -19,6 +19,7 @@
 
 // include the library code:
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
 
 
 // initialize the library with the numbers of the interface pins
@@ -32,6 +33,7 @@ const byte interruptPin = 2;  	//Button D2
 //volatiles
 //how long the led should light, 1 = 500 ms
 volatile int ledControl = 0;
+
 
 
 
@@ -136,7 +138,63 @@ ISR(TIMER1_COMPA_vect) {
 /*
 Button to interrupt UID read
 Used to write new accepted UIDs to memory
+
+*EEPROM - UID is 7 bytes, EEPROM is 1024 bytes
+*Use first bytes of UID for address control
+
+
+Use keypad to lock the adding of new UIDs if there's time
 */
 void buttonPressed() {
-    ledControl = 10;
+  //Used to compare bytes of new UID to those already saved
+  int numCheck = 0;
+  
+  ledControl = 10;
+  byte newUid[7] = {0,0,0,0,0,0,0};
+  byte numberOfUID = 0; //How many UIDS saved, Saved in EEPROM address 0
+  //Read UID
+  if(readSuccess){
+
+
+
+    //check if UID is already in EEPROM
+    if(numberOfUID > 0){
+      //go through every saved UID
+      for(int k = 0; k < numberOfUid; k++){
+        
+        //compare every byte of saved UID at address j+k*7 to those of newUID
+        for(int j = 0; j < 7; j++){
+          if(newUid[j] == EEPROM.read(j+k*7){
+            numCheck++;
+          }
+        }
+        
+        
+        if(numCheck == 7){
+        //UID same as the last one saved
+        }
+
+        //reset numCheck if it didn't hit 7
+        numCheck = 0;
+      }
+    }
+
+
+
+    if(UID == FOUND){
+      //Don't need to save same UID twice, ignore it
+    
+    } else {
+      //NEW UID FOUND - write it to EEPROM
+
+      for(int i; i < 7; i++){
+        //Write the first byte of new UID to lastaddress+1
+        EEPROM.write(((numberOfUID*7+1), newUid[i])
+      }
+      //increment saved UIDs
+      numberOfUID++;
+    }
+
+  }
+
 }
