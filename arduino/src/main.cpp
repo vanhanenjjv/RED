@@ -33,11 +33,11 @@ bool nfc_enabled = true;
 
 
 
-LiquidCrystal lcd(12, 11, 6, 5, 4, 3);
+LiquidCrystal lcd(12, 11, 7, 6, 5, 4);
 
 
 const uint8_t ledPin = PB1;  	//LED D9
-const uint8_t interruptPin = 2;  	//Button D2
+const uint8_t interruptPin = 3;  	//Button D2
 
 //volatiles
 //how long the led should light, 1 = 500 ms
@@ -82,10 +82,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(interruptPin), buttonPressed, RISING);
 
 
-
-
   timer1_setup();
-
 }
 
 
