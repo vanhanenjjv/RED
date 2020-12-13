@@ -19,7 +19,7 @@
 
 // include the library code:
 #include <LiquidCrystal.h>
-#include <EEPROM.h>
+
 
 
 // initialize the library with the numbers of the interface pins
@@ -37,7 +37,7 @@ volatile int ledControl = 0;
 
 
 
-//Timer
+//Timer reset and timer compare goal
 const uint16_t tl_load = 0;
 const uint16_t tl_comp = 31250;
 
@@ -48,8 +48,8 @@ void setup() {
 
 
   //init watchdog timer
-  //__watchdog_reset(); must be called periodically
   WDT_Prescaler_Change();
+  //__watchdog_reset(); must be called periodically
 
 
 
@@ -156,7 +156,7 @@ Used to write new accepted UIDs to memory
 
 *EEPROM - UID is 7 bytes, EEPROM is 1024 bytes
 *Use first bytes of UID for address control
-
+!!***Atmel ATmega328P datasheet page 20-23 contains readymade functions to write/read EEPROM on register level***!!
 
 Use keypad to lock the adding of new UIDs if there's time
 */
@@ -179,7 +179,7 @@ void buttonPressed() {
         
         //compare every byte of saved UID at address j+k*7 to those of newUID
         for(int j = 0; j < 7; j++){
-          if(newUid[j] == EEPROM.read(j+k*7){
+          if(newUid[j] == EEPROM_read((j+k*7)){
             numCheck++;
           }
         }
@@ -204,7 +204,7 @@ void buttonPressed() {
 
       for(int i; i < 7; i++){
         //Write the first byte of new UID to lastaddress+1
-        EEPROM.write(((numberOfUID*7+1), newUid[i])
+        EEPROM_write(((numberOfUID*7+1), newUid[i]))
       }
       //increment saved UIDs
       numberOfUID++;
@@ -226,4 +226,31 @@ WDTCSR |= (1<<WDCE) | (1<<WDE);
 /* Set new prescaler(time-out) value = 1024K cycles (~8 s) */
 WDTCSR = (1<<WDE) | (1<<WDP3) | (1<<WDP0);
 __enable_interrupt();
+}
+
+
+
+void EEPROM_write(unsigned int uiAddress, unsigned char ucData)
+{
+/* Wait for completion of previous write */
+while(EECR & (1<<EEPE));
+/* Set up address and Data Registers */
+EEAR = uiAddress;
+EEDR = ucData;
+/* Write logical one to EEMPE */
+EECR |= (1<<EEMPE);
+/* Start eeprom write by setting EEPE */
+EECR |= (1<<EEPE);
+}
+
+unsigned char EEPROM_read(unsigned int uiAddress)
+{
+/* Wait for completion of previous write */
+while(EECR & (1<<EEPE));
+/* Set up address register */
+EEAR = uiAddress;
+/* Start eeprom read by writing EERE */
+EECR |= (1<<EERE);
+/* Return data from Data Register */
+return EEDR;
 }
