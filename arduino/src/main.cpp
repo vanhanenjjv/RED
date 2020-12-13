@@ -45,6 +45,21 @@ const uint16_t tl_comp = 31250;
 
 
 void setup() {
+
+
+  //init watchdog timer
+  //__watchdog_reset(); must be called periodically
+  WDT_Prescaler_Change();
+
+
+
+
+
+
+
+
+
+
     lcd.begin(16, 2);
     Serial.begin(9600);
 
@@ -197,4 +212,18 @@ void buttonPressed() {
 
   }
 
+}
+
+
+
+
+void WDT_Prescaler_Change(void)
+{
+__disable_interrupt();
+__watchdog_reset();
+/* Start timed equence */
+WDTCSR |= (1<<WDCE) | (1<<WDE);
+/* Set new prescaler(time-out) value = 1024K cycles (~8 s) */
+WDTCSR = (1<<WDE) | (1<<WDP3) | (1<<WDP0);
+__enable_interrupt();
 }
