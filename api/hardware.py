@@ -1,3 +1,4 @@
+from json.decoder import JSONDecodeError
 from logging import error
 from typing import Any, Callable, Dict, NamedTuple, Union
 from threading import Thread
@@ -57,13 +58,15 @@ class Arduino:
         while self.serial.is_open:
             line = self.serial.readline().decode().rstrip('\n')
 
-            message = json.loads(line, object_hook=lambda d: SimpleNamespace(**d))
+            try:
+                message = json.loads(line, object_hook=lambda d: SimpleNamespace(**d))
 
-            receiver = self.receivers[message.type]
+                receiver = self.receivers[message.type]
 
-            if receiver is not None:
-                receiver(message)
-
+                if receiver is not None:
+                    receiver(message)
+            except JSONDecodeError:
+                print(f"[Arduino] {line}")                
 
 class NFC:
     def __init__(self, arduino: Arduino) -> None:
