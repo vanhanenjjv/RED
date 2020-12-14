@@ -5,6 +5,10 @@
       "path": "arduino"
     },
     {
+      "name": "Api",
+      "path": "api"
+    }
+    {
       "name": "Web",
       "path": "web"
     }
@@ -12,7 +16,9 @@
   "settings": {
     "files.associations": {
       "condition_variable": "cpp",
-      "functional": "cpp"
+      "functional": "cpp",
+      "__atomic": "cpp",
+      "filesystem": "cpp"
     }
   }
 }

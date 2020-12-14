@@ -1,11 +1,10 @@
 import uvicorn
-from arduino import arduino
+from hardware import Arduino
 from app import app
-import message
+from hardware import arduino
+
 
 if __name__ == "__main__":
-    arduino.receive = message.parse
     arduino.start(start_receiver=True)
-
     uvicorn.run(app)
     
