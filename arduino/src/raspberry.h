@@ -4,12 +4,14 @@
 #include "nfc.h"
 
 // For sending data
-#define CARD          0x10
+#define NFC_ADD_CARD          0x10
+#define NFC_AUTHENTICATE_CARD 0x11
 
 // For receiving data
-#define NFC_READ_CARD 0x00
-#define LED_ON        0x01  // not used
-#define LED_OFF       0x02  // not used
+#define NFC_AUTHORIZE_CARD        0x00
+#define NFC_AUTHENTICATION_RESULT 0x01
+#define LED_ON                    0x02  // not used
+#define LED_OFF                   0x03  // not used
 
 namespace raspberry {
 

@@ -6,6 +6,7 @@ namespace led {
 
   void setup();
   void set_state(bool is_on);
+  void set_color(int r, int g, int b);
 }
 
 #endif

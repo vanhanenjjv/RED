@@ -18,13 +18,27 @@ void setup(void) {
   led::setup();
   nfc::setup(true);
   timer1::setup();  
+
+  attachInterrupt(
+    digitalPinToInterrupt(3), 
+    []{
+      nfc::card_authentication_requested = true;
+    }, 
+    INPUT_PULLUP);
 }
 
 void loop(void) {
+  if (nfc::card_authentication_requested) {
+    auto card = nfc::read_card();
+
+    raspberry::Message message { NFC_AUTHENTICATE_CARD, &card };
+    raspberry::transmit(message);
+  }
+
   if (nfc::card_requested) {
     auto card = nfc::read_card();
 
-    raspberry::Message message { CARD, &card };
+    raspberry::Message message { NFC_ADD_CARD, &card };
     raspberry::transmit(message);
   }
 

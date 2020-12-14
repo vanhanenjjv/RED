@@ -12,10 +12,15 @@ namespace raspberry {
     document[F("type")] = message.type;
 
     switch (message.type) {
-      case CARD: {
+      case NFC_ADD_CARD: {
         document[F("card")][F("uid")] = message.card->uid;
         nfc::card_requested = false;
-        state::write(NFC_READ_CARD, 0);
+        state::write(NFC_CARD_REQUESTED_STATE, 0);
+        break;
+      }
+      case NFC_AUTHENTICATE_CARD: {
+        document[F("card")][F("uid")] = message.card->uid;
+        nfc::card_authentication_requested = false;
         break;
       }
     }
@@ -28,9 +33,15 @@ namespace raspberry {
     uint8_t type = document[F("type")];
 
     switch (type) {
-      case NFC_READ_CARD: {
+      case NFC_AUTHORIZE_CARD: {
         nfc::card_requested = true;
-        state::write(NFC_READ_CARD, 1);
+        state::write(NFC_CARD_REQUESTED_STATE, 1);
+        break;
+      }
+      case NFC_AUTHENTICATION_RESULT: {
+        bool authorized = document["authorized"].as<bool>();
+        nfc::card_authorized = authorized ? CARD_AUTHORIZED : CARD_UNAUTHORIZED;
+        Serial.println("card authorized = " + authorized);
         break;
       }
     }

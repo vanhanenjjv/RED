@@ -12,8 +12,10 @@ from state import state
 
 
 # should move somewhere else
-NFC_CARD      = 0x10 
-NFC_READ_CARD = 0x00 
+NFC_CARD                  = 0x10 
+NFC_AUTHORIZE_CARD        = 0x11
+NFC_READ_CARD             = 0x00 
+NFC_AUTHENTICATION_RESULT = 0x01
 
 Receiver = Callable[[str], None]
 
@@ -61,10 +63,12 @@ class Arduino:
             try:
                 message = json.loads(line, object_hook=lambda d: SimpleNamespace(**d))
 
-                receiver = self.receivers[message.type]
-
-                if receiver is not None:
+                if hasattr(message, "type"):
+                    receiver = self.receivers[message.type]
                     receiver(message)
+                else:
+                    print(f"[Arduino] {line}")                
+
             except JSONDecodeError:
                 print(f"[Arduino] {line}")                
 
@@ -73,8 +77,17 @@ class NFC:
         self.arduino = arduino
         self.current_card: Union[Card, None] = None
         self.arduino.receivers[NFC_CARD] = self.__receive_card
+        self.arduino.receivers[NFC_AUTHORIZE_CARD] = self.__authenticate_card
 
-    def __receive_card(self, message: SimpleNamespace):
+    def __authenticate_card(self, message: SimpleNamespace) -> None:
+        authorized = message.card.uid in state.cards
+
+        self.arduino.transmit({
+            "type": NFC_AUTHENTICATION_RESULT,
+            "authorized": authorized
+        })
+
+    def __receive_card(self, message: SimpleNamespace) -> None:
         card = Card(message.card.uid)
         self.current_card = card
         

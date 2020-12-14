@@ -9,11 +9,13 @@
 #define NFC_VERBOSE 1
 
 #define PN532_IRQ   (2)
-#define PN532_RESET (3)
+#define PN532_RESET (4)
 
 namespace nfc {
   Adafruit_PN532 module(PN532_IRQ, PN532_RESET);
-  bool card_requested = state::read(NFC_READ_CARD);
+  bool card_requested = state::read(NFC_CARD_REQUESTED_STATE);
+  bool card_authentication_requested = false;
+  int card_authorized = 0;
 
   void setup(bool verbose) {
     module.begin();
